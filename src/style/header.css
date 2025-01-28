@@ -1,0 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@100..1000&family=Exo+2:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Playwrite+GB+S:wght@100..400&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Rubik:ital,wght@0,300..900;1,300..900&family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+
+.headerbar {
+  width: 101.5%;
+  margin: -1rem;
+  display: flex;
+  justify-content: space-between;
+  background-color: #f6faf5;
+  box-shadow: 0 0 0.5px #ffffff, 0 0 0.5px #ffffff, 0 0 10px #45b955;
+}
+.headerbar img {
+  width: 5rem;
+  margin: 1rem 4rem -1rem 6rem;
+  box-shadow: 0.2rem 0.2rem 0.7rem rgb(185, 216, 170);
+  border-radius: 1rem;
+}
+.headerbar ul {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  margin-left: 20rem;
+}
+.headerbar ul li {
+  margin: -2.7rem 1rem;
+  font-size: large;
+  font-family: "Exo 2", serif;
+  font-optical-sizing: auto;
+  color: rgb(93, 93, 93);
+  font-weight: 500;
+  color: #66df76;
+}
+.headerbar .active{
+    color: #177a24;
+    font-weight: 600;
+}
