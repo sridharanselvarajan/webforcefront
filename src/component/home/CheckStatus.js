@@ -1,78 +1,56 @@
-import CheckStatusImg from "../../image/checkstatus.png";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../../style/checkstatus.css";
 import Header from "./Header";
+import CheckStatusImg from "../../image/checkstatus.png";
 import calendarIcon from "../../image/calendar.png";
 import cancelIcon from "../../image/cancel.png";
 import completedIcon from "../../image/completed.png";
 
-const scheduleStatuses = [
-  {
-    scheduledTime: "26th January 2025",
-    pickupAddress: "123 Green Street, Cityville, PIN - 543210",
-    scrapType: "E-waste",
-    estimatedValue: "₹500",
-  },
-  {
-    scheduledTime: "27th January 2025",
-    pickupAddress: "456 Blue Avenue, Cityville, PIN - 543211",
-    scrapType: "Paper",
-    estimatedValue: "₹300",
-  },
-  {
-    scheduledTime: "28th January 2025",
-    pickupAddress: "789 Yellow Road, Cityville, PIN - 543212",
-    scrapType: "Glass",
-    estimatedValue: "₹700",
-  },
-];
-
-const cancelStatuses = [
-  {
-    scheduledTime: "26th January 2025",
-    pickupAddress: "123 Green Street, Cityville, PIN - 543210",
-    scrapType: "E-waste",
-    estimatedValue: "₹500",
-  },
-  {
-    scheduledTime: "27th January 2025",
-    pickupAddress: "456 Blue Avenue, Cityville, PIN - 543211",
-    scrapType: "Paper",
-    estimatedValue: "₹300",
-  },
-  {
-    scheduledTime: "28th January 2025",
-    pickupAddress: "789 Yellow Road, Cityville, PIN - 543212",
-    scrapType: "Glass",
-    estimatedValue: "₹700",
-  },
-];
-
-const completedStatuses = [
-  {
-    scheduledTime: "26th January 2025",
-    pickupAddress: "123 Green Street, Cityville, PIN - 543210",
-    scrapType: "E-waste",
-    estimatedValue: "₹500",
-  },
-  {
-    scheduledTime: "27th January 2025",
-    pickupAddress: "456 Blue Avenue, Cityville, PIN - 543211",
-    scrapType: "Paper",
-    estimatedValue: "₹300",
-  },
-  {
-    scheduledTime: "28th January 2025",
-    pickupAddress: "789 Yellow Road, Cityville, PIN - 543212",
-    scrapType: "Glass",
-    estimatedValue: "₹700",
-  },
-];
-
-function CheckStatus() {
+// Status states (Empty for now, will be updated once API call is successful)
+const CheckStatus = () => {
   const navigate = useNavigate();
+  const [schedule, setSchedule] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const [clickSchedule, setClickSchedule] = useState([true, false, false]);
+
+  useEffect(() => {
+    // Fetch the user email from localStorage
+    const userEmail = localStorage.getItem("userEmail");
+
+    // Check if email exists in localStorage (if not, user needs to log in)
+    if (!userEmail) {
+      setError("You need to be logged in to check the schedule.");
+      setLoading(false);
+      return;
+    }
+
+    // Fetch the schedule data based on the user's email
+    const fetchSchedule = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/schedule/${userEmail}`);
+        // Update the schedule state with the fetched data
+        setSchedule(response.data.scheduledStatus);
+      } catch (err) {
+        setError(err.response ? err.response.data.message : "Server error. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedule();
+  }, []); // Empty dependency array to run once on component mount
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
   return (
     <div className="checkstatuspage">
       <Header />
@@ -89,49 +67,39 @@ function CheckStatus() {
           </button>
           <button
             className={!clickSchedule[1] ? "cancel" : "cancelactive"}
-            onClick={() => {
-              setClickSchedule([false, true, false]);
-            }}
+            onClick={() => setClickSchedule([false, true, false])}
           >
             CANCELLED
           </button>
           <button
             className={!clickSchedule[2] ? "completed" : "completedactive"}
-            onClick={() => {
-              setClickSchedule([false, false, true]);
-            }}
+            onClick={() => setClickSchedule([false, false, true])}
           >
             COMPLETED
           </button>
         </div>
         <div className="list">
           {clickSchedule[0] ? (
-            scheduleStatuses.length > 0 ? (
-              <ScheduleStatus />
+            schedule.length > 0 ? (
+              <ScheduleStatus schedule={schedule} />
             ) : (
-              <p className="noschedulestatus">Nothing Scheduled Pickups!</p>
+              <p className="noschedulestatus">No Scheduled Pickups!</p>
             )
           ) : null}
           {clickSchedule[1] ? (
-            cancelStatuses.length > 0 ? (
-              <CancelStatus />
-            ) : (
-              <p className="nocancelstatus">
-                There is no Cancelled Pickup at this moment
-              </p>
-            )
+            <p className="nocancelstatus">
+              No Cancelled Pickups at this moment.
+            </p>
           ) : null}
           {clickSchedule[2] ? (
-            completedStatuses.length > 0 ? (
-              <CompletedStatus />
-            ) : (
-              <p className="nocompletedstatus">No Completed Pickups!</p>
-            )
+            <p className="nocompletedstatus">No Completed Pickups!</p>
           ) : null}
         </div>
 
         <hr className="line" />
-        <button className="schedulebutton" onClick={()=>{navigate("/schedule")}}>SCHEDULE ANOTHER PICKUP</button>
+        <button className="schedulebutton" onClick={() => { navigate("/schedule"); }}>
+          SCHEDULE ANOTHER PICKUP
+        </button>
         <img
           src={CheckStatusImg}
           alt="checkstatusimg"
@@ -140,85 +108,30 @@ function CheckStatus() {
       </div>
     </div>
   );
-}
+};
 
-function ScheduleStatus() {
+// Schedule Status Component to render each scheduled pickup
+function ScheduleStatus({ schedule }) {
   return (
     <div>
       <ul>
-        {scheduleStatuses.map((item) => {
+        {schedule.map((item, index) => {
           return (
-            <li className="schedulelist">
+            <li className="schedulelist" key={index}>
               <div className="schedulelistheader">
                 <img src={calendarIcon} alt="icon" />
                 <div>
-                  <p className="scheduleaddress">{item.pickupAddress}</p>
+                  <p className="scheduleaddress">{item.address}</p>
                   <div className="category">
-                    <p>Category : {item.scrapType}</p>
-                    <p className="price">Price : {item.estimatedValue}</p>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <p className="scheduletime">{item.scheduledTime}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
+                    <p>Category: {item.remarks ? item.remarks : 'No remarks'}</p>
+                    <p className="price">Weight: {item.weight}</p>
+                    <p className="price">Price: {item.price}</p>
 
-function CancelStatus() {
-  return (
-    <div>
-      <ul>
-        {cancelStatuses.map((item) => {
-          return (
-            <li className="cancellist">
-              <div className="cancellistheader">
-                <img src={cancelIcon} alt="icon" />
-                <div>
-                  <p className="canceladdress">{item.pickupAddress}</p>
-                  <div className="cancelcategory">
-                    <p>Category : {item.scrapType}</p>
-                    <p className="cancelprice">Price : {item.estimatedValue}</p>
                   </div>
                 </div>
               </div>
               <div>
-                <p className="canceltime">{item.scheduledTime}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-function CompletedStatus() {
-  return (
-    <div>
-      <ul>
-        {completedStatuses.map((item) => {
-          return (
-            <li className="completedlist">
-              <div className="completedlistheader">
-                <img src={completedIcon} alt="icon" />
-                <div>
-                  <p className="completedaddress">{item.pickupAddress}</p>
-                  <div className="completedcategory">
-                    <p>Category : {item.scrapType}</p>
-                    <p className="completedprice">
-                      Price : {item.estimatedValue}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <p className="completedtime">{item.scheduledTime}</p>
+                <p className="scheduletime">{item.date}</p>
               </div>
             </li>
           );

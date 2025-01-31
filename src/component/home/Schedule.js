@@ -19,23 +19,29 @@ function Schedule() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // Get the logged-in user's email (this can be stored in local storage or context)
     const userEmail = localStorage.getItem("userEmail");
-
+  
     // Check if email exists in localStorage (if not, user needs to log in)
     if (!userEmail) {
       setError("You need to be logged in to schedule a pickup.");
       return;
     }
-
+  
+    // Format the date to 'YYYY MMMM DD' format
+    const formattedDate = new Date(date).toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  
     // Prepare the data to send to the server
     const pickupData = {
       email: userEmail,
-      date,
+      date: formattedDate, // Use the formatted date
       time,
       address,
       landmark,
@@ -43,7 +49,7 @@ function Schedule() {
       weight,
       remarks,
     };
-
+  
     try {
       // Send data to the server using axios
       const response = await axios.post("http://localhost:5000/api/schedule", pickupData);
@@ -51,7 +57,7 @@ function Schedule() {
       // Display the success message and clear the form
       setSuccessMessage(response.data.message);
       setError("");  // Clear any previous error
-
+  
       // Clear the form fields after successful submission
       setDate("");
       setTime("");
@@ -66,7 +72,7 @@ function Schedule() {
       setSuccessMessage(""); // Clear any success message if an error occurs
     }
   };
-
+  
   return (
     <div>
       <Header />

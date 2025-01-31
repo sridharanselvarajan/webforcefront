@@ -8,6 +8,42 @@ import Work from "./Work";
 import Footer from "./Footer";
 import Household from "./Household";
 
+// Notification Component
+function Notification({ message, type, onClose }) {
+  if (!message) return null;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "10px",
+        right: "10px",
+        backgroundColor: type === "success" ? "#4CAF50" : "#F44336",
+        color: "white",
+        padding: "10px 20px",
+        borderRadius: "5px",
+        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+        zIndex: 1000,
+        animation: "fadeInOut 4s ease",
+      }}
+    >
+      {message}
+      <button
+        onClick={onClose}
+        style={{
+          marginLeft: "10px",
+          backgroundColor: "transparent",
+          border: "none",
+          color: "white",
+          cursor: "pointer",
+        }}
+      >
+        ✖
+      </button>
+    </div>
+  );
+}
+
 function Register() {
   const [details, setDetails] = useState({
     name: "",
@@ -18,13 +54,18 @@ function Register() {
     role: "",
   });
 
+  const [notification, setNotification] = useState({
+    message: "",
+    type: "",
+  });
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (details.password !== details.confirmPassword) {
-      alert("Passwords do not match!");
+      setNotification({ message: "Passwords do not match!", type: "error" });
       return;
     }
 
@@ -49,14 +90,17 @@ function Register() {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Registration successful!");
-        navigate("/");  
+        setNotification({ message: "Registration successful!", type: "success" });
+
+        setTimeout(() => {
+          navigate("/"); // Redirect after 2 seconds
+        }, 2000);
       } else {
-        alert(data.message); 
-         }
+        setNotification({ message: data.message || "Registration failed!", type: "error" });
+      }
     } catch (error) {
       console.error("Error registering user:", error);
-      alert("Server error. Please try again later.");
+      setNotification({ message: "Server error. Please try again later.", type: "error" });
     }
   };
 
@@ -68,10 +112,22 @@ function Register() {
     }));
   };
 
+  const handleNotificationClose = () => {
+    setNotification({ message: "", type: "" });
+  };
+
   return (
     <div>
       <Header />
       <Banner />
+      
+      {/* Notification */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={handleNotificationClose}
+      />
+
       <div className="registersection">
         <h1 className="registerheader">Create an Account</h1>
         <p className="registerpara">
